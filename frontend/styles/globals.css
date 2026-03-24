@@ -1,0 +1,100 @@
+/* c:\projects\kostian_task\frontend\styles\globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Variables for themes */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-card: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --gauge-track: #e5e7eb;
+  --gauge-temp: #ef4444;
+  --gauge-humidity: #3b82f6;
+}
+
+/* Dark theme */
+.dark {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-card: #1f2937;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-color: #374151;
+  --accent-color: #60a5fa;
+  --accent-hover: #3b82f6;
+  --gauge-track: #374151;
+  --gauge-temp: #f87171;
+  --gauge-humidity: #60a5fa;
+}
+
+/* Blue theme */
+.theme-blue {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --border-color: #334155;
+  --accent-color: #38bdf8;
+  --accent-hover: #0ea5e9;
+  --gauge-track: #334155;
+  --gauge-temp: #fb7185;
+  --gauge-humidity: #38bdf8;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Gauge animations */
+@keyframes gaugeAnim {
+  from {
+    stroke-dashoffset: 283;
+  }
+}
+
+.gauge-animation {
+  animation: gaugeAnim 1s ease-out forwards;
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+}
+
+/* Theme transition */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
