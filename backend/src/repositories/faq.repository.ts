@@ -31,10 +31,12 @@ export async function updateFAQ(
   id: number,
   fields: Partial<{ question: string; answer: string }>
 ): Promise<void> {
-  const keys = Object.keys(fields) as (keyof typeof fields)[];
-  if (keys.length === 0) return;
-  const setClause = keys.map((k) => `${k} = ?`).join(', ');
-  const values = keys.map((k) => fields[k]);
+  const entries = (Object.entries(fields) as [string, string][]).filter(
+    ([, v]) => v !== undefined
+  );
+  if (entries.length === 0) return;
+  const setClause = entries.map(([k]) => `${k} = ?`).join(', ');
+  const values = entries.map(([, v]) => v);
   await pool.execute(`UPDATE faq SET ${setClause} WHERE id = ?`, [...values, id]);
 }
 

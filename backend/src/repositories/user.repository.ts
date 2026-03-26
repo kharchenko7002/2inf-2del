@@ -37,10 +37,13 @@ export async function updateUserById(
   id: number,
   fields: Partial<Pick<User, 'name' | 'email' | 'password' | 'role' | 'theme' | 'is_verified'>>
 ): Promise<void> {
-  const keys = Object.keys(fields) as (keyof typeof fields)[];
-  if (keys.length === 0) return;
-  const setClause = keys.map((k) => `${k} = ?`).join(', ');
-  const values = keys.map((k) => fields[k]);
+  type UserFieldValue = string | boolean;
+  const entries = (Object.entries(fields) as [string, UserFieldValue][]).filter(
+    ([, v]) => v !== undefined
+  );
+  if (entries.length === 0) return;
+  const setClause = entries.map(([k]) => `${k} = ?`).join(', ');
+  const values = entries.map(([, v]) => v);
   await pool.execute(
     `UPDATE users SET ${setClause} WHERE id = ?`,
     [...values, id]
