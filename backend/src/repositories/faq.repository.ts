@@ -34,7 +34,7 @@ export async function updateFAQ(
   const keys = Object.keys(fields) as (keyof typeof fields)[];
   if (keys.length === 0) return;
   const setClause = keys.map((k) => `${k} = ?`).join(', ');
-  const values = keys.map((k) => fields[k]);
+  const values: any[] = keys.map((k) => fields[k]);
   await pool.execute(`UPDATE faq SET ${setClause} WHERE id = ?`, [...values, id]);
 }
 

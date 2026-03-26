@@ -29,5 +29,3 @@ export async function testConnection(): Promise<void> {
     throw error;
   }
 }
-
-export default pool;
