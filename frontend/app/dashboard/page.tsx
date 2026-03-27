@@ -11,6 +11,7 @@ import HumidityCard from '../../components/dashboard/HumidityCard';
 import RangeFilter from '../../components/dashboard/RangeFilter';
 import MetricToggle from '../../components/dashboard/MetricToggle';
 import SensorChart from '../../components/charts/SensorChart';
+import ExportButton from '../../components/dashboard/ExportButton';
 import { useLatestReading, useSensorHistory } from '../../hooks/useSensorData';
 import { RangeOption } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
@@ -87,7 +88,10 @@ export default function DashboardPage() {
             title="Historical Data"
             subtitle={`Showing ${range} range`}
             actions={
-              <RangeFilter value={range} onChange={setRange} />
+              <div className="flex items-center gap-2">
+                <ExportButton data={historyData || []} range={range} disabled={historyLoading} />
+                <RangeFilter value={range} onChange={setRange} />
+              </div>
             }
           >
             <div className="mt-4 mb-3">
