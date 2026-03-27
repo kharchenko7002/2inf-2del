@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer';
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'localhost',
   port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+  secure: process.env.SMTP_SECURE === 'true',
   auth: {
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
@@ -20,22 +20,22 @@ export async function sendVerificationEmail(
       <p style="color: #666; font-size: 16px;">
         Thank you for registering! Please verify your email by entering the code below:
       </p>
-      
+
       <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
         <p style="font-size: 14px; color: #999; margin: 0 0 10px 0;">Your verification code:</p>
         <p style="font-size: 32px; font-weight: bold; color: #333; letter-spacing: 5px; margin: 0;">
           ${code}
         </p>
       </div>
-      
+
       <p style="color: #666; font-size: 14px;">
         This code will expire in <strong>10 minutes</strong>.
       </p>
-      
+
       <p style="color: #666; font-size: 14px;">
         If you didn't request this verification code, please ignore this email.
       </p>
-      
+
       <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
       <p style="color: #999; font-size: 12px; text-align: center;">
         This is an automated message, please do not reply.
@@ -78,7 +78,11 @@ const alertSubjects: Record<AlertType, string> = {
   humidity_low: 'Humidity Alert – Value Too Low',
 };
 
-function buildAlertBody(type: AlertType, value: number, timestamp: string): { text: string; html: string } {
+function buildAlertBody(
+  type: AlertType,
+  value: number,
+  timestamp: string
+): { text: string; html: string } {
   const formattedValue =
     type === 'temp_high' || type === 'temp_low'
       ? `${value.toFixed(1)}°C`
@@ -100,6 +104,41 @@ function buildAlertBody(type: AlertType, value: number, timestamp: string): { te
       <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
       <p style="color: #999; font-size: 12px; text-align: center;">
         This is an automated alert from the Temperature Monitoring System.
+      </p>
+    </div>
+  `;
+
+  return { text: body, html };
+}
+
+export async function sendAlertEmail(
+  type: AlertType,
+  value: number,
+  timestamp: string,
+  sensorName: string
+): Promise<void> {
+  const alertEmail = process.env.ALERT_EMAIL;
+  if (!alertEmail) {
+    console.warn('ALERT_EMAIL not set – skipping alert for', sensorName, type);
+    return;
+  }
+
+  const subject = alertSubjects[type];
+  const { text, html } = buildAlertBody(type, value, timestamp);
+
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || 'noreply@example.com',
+      to: alertEmail,
+      subject,
+      text,
+      html,
+    });
+  } catch (error) {
+    console.error('Failed to send alert email:', error);
+  }
+}
+
 export async function sendPasswordResetEmail(
   email: string,
   resetLink: string
@@ -138,23 +177,6 @@ export async function sendPasswordResetEmail(
     </div>
   `;
 
-  return { text: body, html };
-}
-
-export async function sendAlertEmail(
-  type: AlertType,
-  value: number,
-  timestamp: string,
-  sensorName: string
-): Promise<void> {
-  const alertEmail = process.env.ALERT_EMAIL;
-  if (!alertEmail) {
-    console.warn('ALERT_EMAIL not set – skipping alert for', sensorName, type);
-    return;
-  }
-
-  const subject = alertSubjects[type];
-  const { text, html } = buildAlertBody(type, value, timestamp);
   const textContent = `
 Password Reset
 
@@ -170,13 +192,6 @@ If you did not request a password reset, please ignore this email.
   try {
     await transporter.sendMail({
       from: process.env.SMTP_FROM || 'noreply@example.com',
-      to: alertEmail,
-      subject,
-      text,
-      html,
-    });
-  } catch (error) {
-    console.error('Failed to send alert email:', error);
       to: email,
       subject: 'Password Reset',
       text: textContent,
