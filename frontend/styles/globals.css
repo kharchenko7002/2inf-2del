@@ -34,21 +34,6 @@
   --gauge-humidity: #60a5fa;
 }
 
-/* Blue theme */
-.theme-blue {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-card: #1e293b;
-  --text-primary: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --border-color: #334155;
-  --accent-color: #38bdf8;
-  --accent-hover: #0ea5e9;
-  --gauge-track: #334155;
-  --gauge-temp: #fb7185;
-  --gauge-humidity: #38bdf8;
-}
-
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);

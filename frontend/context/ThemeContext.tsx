@@ -17,12 +17,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 function applyThemeToDocument(theme: Theme) {
   const root = document.documentElement;
-  root.classList.remove('dark', 'theme-blue', 'theme-white');
+  root.classList.remove('dark');
 
   if (theme === 'dark') {
     root.classList.add('dark');
-  } else if (theme === 'blue') {
-    root.classList.add('theme-blue');
   }
   // 'white' is the default, no class needed
 }

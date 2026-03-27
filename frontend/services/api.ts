@@ -83,7 +83,7 @@ export const userApi = {
   getProfile: () => api.get<ApiResponse<User>>('/api/user/profile'),
   updateProfile: (data: { name?: string; email?: string; password?: string }) =>
     api.patch<ApiResponse<User>>('/api/user/profile', data),
-  updateTheme: (theme: 'white' | 'dark' | 'blue') =>
+  updateTheme: (theme: 'white' | 'dark') =>
     api.patch<ApiResponse<User>>('/api/user/theme', { theme }),
 };
 

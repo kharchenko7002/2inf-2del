@@ -5,7 +5,7 @@ export interface User {
   name: string;
   email: string;
   role: 'user' | 'admin';
-  theme: 'white' | 'dark' | 'blue';
+  theme: 'white' | 'dark';
   is_verified: boolean;
   created_at: string;
   updated_at: string;
@@ -43,4 +43,4 @@ export interface ReadingsQuery {
   endDate?: string;
 }
 
-export type Theme = 'white' | 'dark' | 'blue';
+export type Theme = 'white' | 'dark';

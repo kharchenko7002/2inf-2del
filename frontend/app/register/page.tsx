@@ -6,6 +6,7 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import RegisterForm from '../../components/forms/RegisterForm';
 import { useAuth } from '../../hooks/useAuth';
+import PreAuthThemeToggle from '../../components/ui/PreAuthThemeToggle';
 
 export default function RegisterPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -30,6 +31,9 @@ export default function RegisterPage() {
       className="min-h-screen flex items-center justify-center px-4 py-12"
       style={{ backgroundColor: 'var(--bg-primary)' }}
     >
+      <div className="absolute top-4 right-4">
+        <PreAuthThemeToggle />
+      </div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl mb-4 shadow-lg">
