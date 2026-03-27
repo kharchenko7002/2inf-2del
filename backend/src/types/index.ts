@@ -29,6 +29,14 @@ export interface SensorData {
   created_at: Date;
 }
 
+export interface SensorDataCopyRow {
+  id: number;
+  sensor_navn: string;
+  verdi: number;
+  suffiks: string;
+  tidspunkt: Date;
+}
+
 export interface RefreshToken {
   id: number;
   user_id: number;

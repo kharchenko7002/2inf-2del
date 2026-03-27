@@ -1,7 +1,5 @@
-// c:\projects\kostian_task\backend\src\repositories\readings.repository.ts
-
 import pool from '../config/db';
-import { SensorData, RangeOption } from '../types';
+import { SensorData, SensorDataCopyRow, RangeOption } from '../types';
 import { RowDataPacket } from 'mysql2';
 
 function getRangeInterval(range: RangeOption): string | null {
@@ -12,16 +10,57 @@ function getRangeInterval(range: RangeOption): string | null {
     '24h': '24 HOUR',
     '7d': '7 DAY',
     '30d': '30 DAY',
-    'all': null,
+    all: null,
   };
   return map[range];
 }
 
+/**
+ * Merge temperature rows and humidity rows into SensorData objects.
+ * Rounds timestamps to the nearest minute for matching.
+ */
+function mergeReadings(
+  tempRows: SensorDataCopyRow[],
+  fuktRows: SensorDataCopyRow[]
+): SensorData[] {
+  const fuktByMinute = new Map<number, number>();
+  for (const row of fuktRows) {
+    const key = Math.floor(new Date(row.tidspunkt).getTime() / 60000);
+    fuktByMinute.set(key, Number(row.verdi));
+  }
+
+  return tempRows.map((row) => {
+    const key = Math.floor(new Date(row.tidspunkt).getTime() / 60000);
+    return {
+      id: row.id,
+      temp: Number(row.verdi),
+      fukt: fuktByMinute.get(key) ?? 0,
+      created_at: row.tidspunkt,
+    };
+  });
+}
+
 export async function getLatestReading(): Promise<SensorData | null> {
-  const [rows] = await pool.execute<RowDataPacket[]>(
-    'SELECT * FROM sensor_data ORDER BY created_at DESC LIMIT 1'
+  const [tempRows] = await pool.execute<RowDataPacket[]>(
+    "SELECT id, sensor_navn, CAST(verdi AS DECIMAL(10,2)) AS verdi, suffiks, tidspunkt FROM sensor_data_copy WHERE sensor_navn LIKE '%temp%' ORDER BY tidspunkt DESC LIMIT 1"
   );
-  return (rows[0] as SensorData) || null;
+  const [fuktRows] = await pool.execute<RowDataPacket[]>(
+    "SELECT id, sensor_navn, CAST(verdi AS DECIMAL(10,2)) AS verdi, suffiks, tidspunkt FROM sensor_data_copy WHERE sensor_navn LIKE '%fukt%' OR sensor_navn LIKE '%hum%' ORDER BY tidspunkt DESC LIMIT 1"
+  );
+
+  if (tempRows.length === 0 && fuktRows.length === 0) return null;
+
+  const tempRow = tempRows[0] as SensorDataCopyRow | undefined;
+  const fuktRow = fuktRows[0] as SensorDataCopyRow | undefined;
+
+  const created_at = tempRow?.tidspunkt ?? fuktRow?.tidspunkt ?? new Date();
+
+  return {
+    id: tempRow?.id ?? fuktRow?.id ?? 0,
+    temp: tempRow ? Number(tempRow.verdi) : 0,
+    fukt: fuktRow ? Number(fuktRow.verdi) : 0,
+    created_at,
+  };
 }
 
 export async function getReadingsHistory(
@@ -29,28 +68,41 @@ export async function getReadingsHistory(
   startDate?: string,
   endDate?: string
 ): Promise<SensorData[]> {
-  let query = 'SELECT * FROM sensor_data WHERE 1=1';
+  let whereClause = '1=1';
   const params: (string | number)[] = [];
 
   if (startDate && endDate) {
-    query += ' AND created_at BETWEEN ? AND ?';
+    whereClause += ' AND tidspunkt BETWEEN ? AND ?';
     params.push(startDate, endDate);
   } else if (range !== 'all') {
     const interval = getRangeInterval(range);
     if (interval) {
-      query += ` AND created_at >= NOW() - INTERVAL ${interval}`;
+      whereClause += ` AND tidspunkt >= NOW() - INTERVAL ${interval}`;
     }
   }
 
-  query += ' ORDER BY created_at ASC';
+  const limit = !startDate && !endDate && range === 'all' ? 5000 : 2000;
 
-  // Limit results to avoid huge responses
-  if (!startDate && !endDate && range === 'all') {
-    query += ' LIMIT 5000';
-  } else {
-    query += ' LIMIT 2000';
-  }
+  const [tempRows] = await pool.execute<RowDataPacket[]>(
+    `SELECT id, sensor_navn, CAST(verdi AS DECIMAL(10,2)) AS verdi, suffiks, tidspunkt
+     FROM sensor_data_copy
+     WHERE sensor_navn LIKE '%temp%' AND ${whereClause}
+     ORDER BY tidspunkt ASC
+     LIMIT ${limit}`,
+    params
+  );
 
-  const [rows] = await pool.execute<RowDataPacket[]>(query, params);
-  return rows as SensorData[];
+  const [fuktRows] = await pool.execute<RowDataPacket[]>(
+    `SELECT id, sensor_navn, CAST(verdi AS DECIMAL(10,2)) AS verdi, suffiks, tidspunkt
+     FROM sensor_data_copy
+     WHERE (sensor_navn LIKE '%fukt%' OR sensor_navn LIKE '%hum%') AND ${whereClause}
+     ORDER BY tidspunkt ASC
+     LIMIT ${limit}`,
+    params
+  );
+
+  return mergeReadings(
+    tempRows as SensorDataCopyRow[],
+    fuktRows as SensorDataCopyRow[]
+  );
 }
