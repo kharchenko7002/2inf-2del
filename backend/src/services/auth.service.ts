@@ -1,5 +1,6 @@
 // c:\projects\kostian_task\backend\src\services\auth.service.ts
 
+import crypto from 'crypto';
 import * as userRepo from '../repositories/user.repository';
 import * as tokenRepo from '../repositories/token.repository';
 import * as emailVerifRepo from '../repositories/email-verification.repository';
@@ -10,7 +11,7 @@ import {
   verifyRefreshToken,
   getRefreshTokenExpiry,
 } from '../utils/jwt';
-import { sendVerificationEmail } from './mailer.service';
+import { sendVerificationEmail, sendPasswordResetEmail } from './mailer.service';
 import { AuthTokens, TokenPayload, UserPublic } from '../types';
 
 function generateVerificationCode(): string {
@@ -189,4 +190,40 @@ export async function getMe(userId: number): Promise<UserPublic> {
   }
   const { password: _pw, ...userPublic } = user;
   return userPublic as UserPublic;
+}
+
+export async function forgotPassword(email: string): Promise<void> {
+  const user = await userRepo.findUserByEmail(email);
+  if (!user) {
+    // Return silently – do not leak whether the email exists
+    return;
+  }
+
+  const token = crypto.randomBytes(32).toString('hex');
+  const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  await userRepo.updateUserById(user.id, {
+    reset_token: token,
+    reset_token_expires: expires,
+  });
+
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const resetLink = `${frontendUrl}/reset-password?token=${token}`;
+
+  await sendPasswordResetEmail(email, resetLink);
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  const user = await userRepo.findUserByResetToken(token);
+  if (!user) {
+    throw new Error('Invalid reset token');
+  }
+
+  const hashedPassword = await hashPassword(newPassword);
+
+  await userRepo.updateUserById(user.id, {
+    password: hashedPassword,
+    reset_token: null,
+    reset_token_expires: null,
+  });
 }
