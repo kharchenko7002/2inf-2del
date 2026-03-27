@@ -7,6 +7,8 @@ import {
   loginSchema,
   verifyEmailSchema,
   resendVerificationCodeSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from '../validators/auth.validator';
 import { sendSuccess, sendError, sendCreated } from '../utils/response';
 
@@ -172,5 +174,43 @@ export async function getMe(req: Request, res: Response): Promise<void> {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to get user';
     sendError(res, message, 404);
+  }
+}
+
+export async function forgotPassword(req: Request, res: Response): Promise<void> {
+  const parsed = forgotPasswordSchema.safeParse(req.body);
+  if (!parsed.success) {
+    sendError(res, 'Validation error', 400, parsed.error.errors);
+    return;
+  }
+
+  try {
+    const { email } = parsed.data;
+    await authService.forgotPassword(email);
+  } catch {
+    // Swallow errors – always return the same response
+  }
+
+  sendSuccess(res, null, 'If an account with that email exists, a reset link has been sent.');
+}
+
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  const parsed = resetPasswordSchema.safeParse(req.body);
+  if (!parsed.success) {
+    sendError(res, 'Validation error', 400, parsed.error.errors);
+    return;
+  }
+
+  try {
+    const { token, newPassword } = parsed.data;
+    await authService.resetPassword(token, newPassword);
+    sendSuccess(res, null, 'Password has been reset successfully.');
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Password reset failed';
+    if (message === 'Invalid reset token') {
+      sendError(res, message, 400);
+    } else {
+      sendError(res, message, 500);
+    }
   }
 }

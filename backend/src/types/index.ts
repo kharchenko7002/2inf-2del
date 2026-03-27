@@ -8,6 +8,8 @@ export interface User {
   role: 'user' | 'admin';
   theme: 'white' | 'dark' | 'blue';
   is_verified: boolean;
+  reset_token: string | null;
+  reset_token_expires: Date | null;
   created_at: Date;
   updated_at: Date;
 }

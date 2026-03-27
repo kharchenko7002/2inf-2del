@@ -35,7 +35,7 @@ export async function createUser(
 
 export async function updateUserById(
   id: number,
-  fields: Partial<Pick<User, 'name' | 'email' | 'password' | 'role' | 'theme' | 'is_verified'>>
+  fields: Partial<Pick<User, 'name' | 'email' | 'password' | 'role' | 'theme' | 'is_verified' | 'reset_token' | 'reset_token_expires'>>
 ): Promise<void> {
   const keys = Object.keys(fields) as (keyof typeof fields)[];
   if (keys.length === 0) return;
@@ -52,6 +52,14 @@ export async function getAllUsers(): Promise<User[]> {
     'SELECT id, name, email, role, theme, created_at, updated_at FROM users ORDER BY created_at DESC'
   );
   return rows as User[];
+}
+
+export async function findUserByResetToken(token: string): Promise<User | null> {
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    'SELECT * FROM users WHERE reset_token = ? AND reset_token_expires > NOW()',
+    [token]
+  );
+  return (rows[0] as User) || null;
 }
 
 export async function deleteUserById(id: number): Promise<void> {
