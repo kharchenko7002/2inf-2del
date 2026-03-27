@@ -19,19 +19,13 @@ const themes: { value: Theme; label: string; description: string; preview: strin
     description: 'Easy on the eyes',
     preview: 'bg-gray-900 border-gray-700',
   },
-  {
-    value: 'blue',
-    label: 'Blue',
-    description: 'Deep ocean blue',
-    preview: 'bg-slate-900 border-slate-700',
-  },
 ];
 
 export default function ThemeSwitcher() {
   const { theme, setTheme } = useThemeContext();
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 gap-3">
       {themes.map((t) => (
         <button
           key={t.value}

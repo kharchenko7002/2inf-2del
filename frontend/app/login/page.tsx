@@ -6,6 +6,7 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import LoginForm from '../../components/forms/LoginForm';
 import { useAuth } from '../../hooks/useAuth';
+import PreAuthThemeToggle from '../../components/ui/PreAuthThemeToggle';
 
 export default function LoginPage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -30,6 +31,9 @@ export default function LoginPage() {
       className="min-h-screen flex items-center justify-center px-4 py-12"
       style={{ backgroundColor: 'var(--bg-primary)' }}
     >
+      <div className="absolute top-4 right-4">
+        <PreAuthThemeToggle />
+      </div>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
