@@ -103,6 +103,13 @@ export const readingsApi = {
     if (query.endDate) params.endDate = query.endDate;
     return api.get<ApiResponse<SensorData[]>>('/api/readings/history', { params });
   },
+  uploadFile: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<ApiResponse<SensorData[]>>('/api/readings/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 // FAQ
